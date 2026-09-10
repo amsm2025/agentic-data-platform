@@ -5,6 +5,41 @@ A portfolio-grade Senior Agentic Data Engineer project that combines **LangGraph
 ## Business scenario
 A multi-system enterprise receives customer, order, inventory, HR, and CRM events from upstream applications. The platform must ingest events in near real time, validate and transform them, load trusted data into Snowflake, build analytics models with dbt, and let an AI agent diagnose pipeline issues and answer natural-language data questions safely.
 
+## Implementation status
+
+The current implementation has been validated end-to-end:
+
+```text
+Python Order Producer
+        |
+        v
+Kafka: orders.raw
+        |
+        v
+Spark Structured Streaming
+   |                 |
+   | VALID           | INVALID
+   v                 v
+Snowflake          Kafka
+RAW.ORDERS         orders.dlq
+   |
+   v
+dbt
+   |
+   +--> ANALYTICS.STG_ORDERS
+   |
+   +--> ANALYTICS.FCT_SALES
+            |
+            v
+     LangGraph DataOps Agent
+            |
+            +--> OpenAI tool calling
+            +--> read-only Snowflake SQL
+            +--> pipeline contract inspection
+            +--> Kafka DLQ inspection
+            +--> governed diagnostics
+            
+
 ## Architecture
 
 ```text

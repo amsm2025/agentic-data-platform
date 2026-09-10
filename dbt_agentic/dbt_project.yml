@@ -1,0 +1,11 @@
+name: agentic_data
+version: '1.0.0'
+config-version: 2
+profile: agentic_data
+model-paths: ["models"]
+models:
+  agentic_data:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

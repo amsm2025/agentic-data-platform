@@ -1,0 +1,12 @@
+version: 2
+sources:
+  - name: raw
+    database: AGENTIC_DATA
+    schema: RAW
+    tables:
+      - name: orders
+        columns:
+          - name: event_id
+            tests: [not_null, unique]
+          - name: order_id
+            tests: [not_null]

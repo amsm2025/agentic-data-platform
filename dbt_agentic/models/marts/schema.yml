@@ -1,0 +1,9 @@
+version: 2
+models:
+  - name: fct_sales
+    description: Daily sales facts by source system.
+    columns:
+      - name: order_date
+        tests: [not_null]
+      - name: gross_sales
+        tests: [not_null]

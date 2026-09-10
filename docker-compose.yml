@@ -1,0 +1,80 @@
+services:
+  kafka:
+    image: apache/kafka:4.0.0
+    container_name: agentic-kafka
+    hostname: kafka
+    ports:
+      - "9092:9092"
+
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+
+      KAFKA_LISTENERS: >
+        HOST://:9092,
+        DOCKER://:29092,
+        CONTROLLER://:9093
+
+      KAFKA_ADVERTISED_LISTENERS: >
+        HOST://localhost:9092,
+        DOCKER://kafka:29092
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: >
+        CONTROLLER:PLAINTEXT,
+        HOST:PLAINTEXT,
+        DOCKER:PLAINTEXT
+
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+    networks:
+      - agentic-net
+
+  spark:
+    image: apache/spark:3.5.3-java17-python3
+    container_name: agentic-spark
+    hostname: spark
+
+    depends_on:
+      - kafka
+
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_ORDER_TOPIC: orders.raw
+      KAFKA_DLQ_TOPIC: orders.dlq
+      SPARK_CHECKPOINT: /opt/agentic/checkpoints/orders
+      SNOWFLAKE_ACCOUNT: OYKSVAR-CR09457
+      SNOWFLAKE_USER: AGENTIC_SPARK
+      SNOWFLAKE_PASSWORD: ${SNOWFLAKE_PASSWORD}
+      SNOWFLAKE_WAREHOUSE: AGENTIC_WH
+      SNOWFLAKE_DATABASE: AGENTIC_DATA
+      SNOWFLAKE_SCHEMA: RAW
+      SNOWFLAKE_ROLE: AGENTIC_ENGINEER
+
+    volumes:
+      - ./spark:/opt/agentic/spark
+      - ./data/checkpoints:/opt/agentic/checkpoints
+      - ./data/ivy:/home/spark/.ivy2
+
+    working_dir: /opt/agentic
+
+    command:
+      - /opt/spark/bin/spark-submit
+      - --master
+      - local[*]
+      - --packages
+      - org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3,net.snowflake:spark-snowflake_2.12:3.1.9
+      - /opt/agentic/spark/order_stream.py
+
+    networks:
+      - agentic-net
+
+networks:
+  agentic-net:
+    driver: bridge

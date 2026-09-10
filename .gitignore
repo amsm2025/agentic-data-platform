@@ -1,0 +1,12 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+target/
+dbt_packages/
+logs/
+*.tfstate
+*.tfstate.*
+.terraform/
+data/
+dbt_agentic/.user.yml
